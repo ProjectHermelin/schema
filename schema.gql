@@ -1,8 +1,130 @@
-type User {
-    userID: ID!
-    name: String!
+# schame sprincled with some dGraph directives
+
+type User @secret(field: "password") {
+    id: ID!
+    username: String! @search
+    name: String! @search
+    avatar: String
     lastSignIn: DateTime
-    recentScores: [Float]
     reputation: Int
     active: Boolean
+    challangesCreated: [Challange!] @hasInverse(author)
+    # TODO: do we need a specific 
+    challangesActive: [ChallangeActive!] @hasInverse(user)
+    challangesSolved: [ChallangeSolved!] @hasInverse(user)
+    createdAt: DateTime!
+    updatedAt: DateTime!
 }
+
+# enum ChallangeProgresType {
+#     Participating
+#     Finished
+# }
+
+# node between user and challange for extra information
+interface ChallangeProgress {
+    id: ID!
+    user: User!
+    challange: Challange!
+    note: String
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+type ChallangeActive implements ChallangeProgress {}
+type ChallangeSolved implements ChallangeProgress {}
+ 
+type Challange {
+    id: ID!
+    author: User!
+    title: String! @search
+    image: Image
+    location: Point @search
+    challangesActive: [ChallangeActive!]
+    challangesSolved: [ChallangeSolved!]
+    createdAt: DateTime!
+    updatedAt: DateTime!
+}
+
+# in the first steps we calculate the garden client side as following:
+#
+# number of challanges the user absolved
+# calculate the state of the garden based on time intervalls (weeks).
+# 
+
+
+
+#############################
+# future stuff
+#############################
+type Garden {
+    id: ID!
+    user: User!
+    # how fast does is grow
+    # fertility: Int @query(number of myChallanges in the last 30 days)
+    fertility: Int
+    # what have you achieved
+    points: Int
+}
+
+type Fauna {
+    id: ID!
+    user: User!
+    type: FaunaType!
+}
+
+enum FaunaType {
+    Tree
+    Flower
+}
+
+
+#############################
+# moderation
+#############################
+
+enum ReportReason {
+    
+}
+enum ReportType {
+    User
+    Challange
+    Comment
+}
+
+type report {
+    id: ID!
+    user: User!
+    # what was reported
+    type: ReportType!
+    # why was is reported
+    reason: ReportReason!
+    # short description
+    note: String
+    # node that was reported ()
+    node: 
+}
+
+
+
+#############################
+# examples
+#############################
+type Product {
+    productID: ID!
+    name: String @search(by: [term])
+    reviews: [Review] @hasInverse(field: about)
+}
+
+type Customer {
+    username: String! @id @search(by: [hash, regexp])
+    reviews: [Review] @hasInverse(field: by)
+}
+
+type Review {
+    id: ID!
+    about: Product!
+    by: Customer!
+    comment: String @search(by: [fulltext])
+    rating: Int @search
+}
+  
